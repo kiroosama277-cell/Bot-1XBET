@@ -1,8 +1,7 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 import csv
 import os
-import random
 from datetime import datetime
 
 # ==========================================
@@ -11,33 +10,18 @@ from datetime import datetime
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# --- سحب المفتاح ---
-api_keys = []
-if "KEY1" in st.secrets: api_keys.append(st.secrets["KEY1"])
-if "KEY2" in st.secrets: api_keys.append(st.secrets["KEY2"])
-if "KEY3" in st.secrets: api_keys.append(st.secrets["KEY3"])
-
-if not api_keys:
-    st.error("⛔ لا توجد مفاتيح في Secrets.")
+# --- الاتصال بـ Groq ---
+try:
+    # الكود ده بيدور على مفتاح Groq اللي حطيتيه في Secrets
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+except:
+    st.error("⛔ لم يتم العثور على مفتاح Groq في Secrets.")
     st.stop()
-
-# دالة التبديل الذكي
-def get_response_smart(prompt, knowledge):
-    for key in api_keys:
-        try:
-            genai.configure(api_key=key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            full_text = f"أنت موظف دعم فني. جاوب بناءً على هذا فقط:\n{knowledge}\nالسؤال: {prompt}"
-            response = model.generate_content(full_text)
-            return response.text
-        except Exception:
-            continue
-    return "عذراً، السيرفر مشغول جداً حالياً. يرجى المحاولة بعد دقيقة."
 
 # إعداد الصفحة
 st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
 
-# إخفاء العلامات
+# إخفاء العلامات المائية
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -49,7 +33,7 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# حفظ المحادثة (في الخلفية بدون زرار)
+# دوال الحفظ والمسح
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -78,7 +62,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==========================================
-# ✅ واجهة البوت (للمستخدم فقط)
+# ✅ واجهة البوت
 # ==========================================
 st.title("🤖 مساعد 1xBet الذكي")
 
@@ -88,9 +72,7 @@ with col2:
         clear_chat()
         st.rerun()
 
-st.success("أهلاً بك! كيف يمكنني مساعدتك اليوم؟ ✅")
-
-# (تم إزالة لوحة التحكم هنا)
+st.success("أهلاً بك! (يعمل الآن بمحرك Groq السريع ⚡)")
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -119,8 +101,4 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    with st.spinner('جاري التفكير...'):
-        bot_reply = get_response_smart(prompt, knowledge_base)
-        st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-        st.chat_message("assistant").write(bot_reply)
-        save_chat(prompt, bot_reply)
+    with st.spinner('جاري التح
