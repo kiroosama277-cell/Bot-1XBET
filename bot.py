@@ -4,16 +4,16 @@ import google.generativeai as genai
 # ==========================================
 # 🔐 إعدادات كلمة المرور
 # ==========================================
-BOT_PASSWORD = "12345"  # غيري الرقم ده للباسورد اللي تحبيه
+BOT_PASSWORD = "12345"  # غيري الرقم ده للباسورد اللي تحبيها
 
-# --- مفتاحك الحقيقي ---
-my_secret_key = "AIzaSyCvVoS1Miq83dVhLCNAApAKBnx7iArMLH0"
+# --- مفتاحك الحقيقي الجديد ---
+my_secret_key = "AIzaSyBTdcwG8iLiyMmjTUuB9juvYThWHJC9fzg"
 
 # إعداد الصفحة
 st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
 
 # ==========================================
-# 🚫 كود إخفاء العلامات المائية والقوائم
+# 🚫 كود إخفاء العلامات المائية والقوائم (لزيادة الخصوصية)
 # ==========================================
 hide_streamlit_style = """
             <style>
@@ -21,6 +21,7 @@ hide_streamlit_style = """
             footer {visibility: hidden;}
             header {visibility: hidden;}
             .stDeployButton {display:none;}
+            [data-testid="stSidebar"] {display: none;}
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
@@ -28,7 +29,6 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 # ==========================================
 # 🛑 نظام الحماية (تسجيل الدخول)
 # ==========================================
-# لو الباسورد لسه مدخلش أو غلط
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -39,10 +39,10 @@ if not st.session_state.authenticated:
     if st.button("دخول"):
         if password_input == BOT_PASSWORD:
             st.session_state.authenticated = True
-            st.rerun()  # إعادة تحميل الصفحة للدخول
+            st.rerun()
         else:
             st.error("كلمة المرور غير صحيحة ⛔")
-    st.stop()  # وقف الكود هنا لحد ما يدخل صح
+    st.stop()
 
 # ==========================================
 # ✅ هنا يبدأ البوت (بعد الدخول الصحيح)
@@ -66,12 +66,16 @@ knowledge_base = """
 - هو دمج بين الرهان الأحادي والاكسبريس.
 - يمكن وضع من 2 لـ 8 أحداث.
 - الميزة: لو حدث واحد فقط كسب، ستحصل على عائد (مش لازم كله يكسب).
+- مثال: 4 أحداث برهان 150 جنيه. يقسم النظام المبلغ على 15 رهان مختلف.
+- لو كسب حدث واحد (مثلاً معامله 1.5)، العائد يكون 15 جنيه.
+- لو كسبت كل الأحداث، العائد يكون كبيراً جداً.
 """
 
 # تشغيل الذكاء الاصطناعي
 try:
     genai.configure(api_key=my_secret_key)
     
+    # البحث الذكي عن الموديل
     available_model = None
     for m in genai.list_models():
         if 'generateContent' in m.supported_generation_methods:
@@ -91,14 +95,4 @@ try:
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.chat_message("user").write(prompt)
 
-            full_prompt = f"أنت موظف دعم فني. جاوب بناءً على هذا فقط:\n{knowledge_base}\nالسؤال: {prompt}"
-            
-            with st.spinner('جاري التفكير...'):
-                response = model.generate_content(full_prompt)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-                st.chat_message("assistant").write(response.text)
-    else:
-        st.error("لم يتم العثور على موديل متاح.")
-
-except Exception as e:
-    st.error(f"حدث خطأ: {e}")
+            full_prompt = f"أنت موظف دعم فني. جاوب بناءً على هذا فقط:\n{knowledge_base}\nالسؤال: {prompt}
