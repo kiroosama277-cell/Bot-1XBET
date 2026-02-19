@@ -21,11 +21,11 @@ except:
 st.set_page_config(page_title="المساعد الذكي", page_icon="✨", layout="centered", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 🎨 التصميم الشامل (Soft UI / Neumorphism) + الزجاج
+# 🎨 التصميم الشامل (Soft Bubbles & Glassmorphism)
 # ==========================================
 custom_css = """
 <style>
-/* 1. إخفاء قوائم Streamlit الافتراضية تماماً */
+/* إخفاء القوائم */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden !important;}
 header {visibility: hidden;}
@@ -34,112 +34,145 @@ header {visibility: hidden;}
 [data-testid="stDecoration"] {display: none;}
 [data-testid="stStatusWidget"] {display: none;}
 
-/* 2. خلفية الصفحة (تدرج لوني هادي ومريح جداً للعين) */
+/* خلفية الصفحة (رمادي فاتح جداً مريح) */
 .stApp {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    background-color: #F4F7F6;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* 3. تنسيق شاشة الدخول (تأثير الزجاج - Glassmorphism) */
-.glass-container {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-    padding: 40px;
-    text-align: center;
-    margin-top: 50px;
-    direction: rtl;
+/* ------------------------------------- */
+/* 🛑 تنسيق شاشة تسجيل الدخول */
+/* ------------------------------------- */
+.login-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rem;
 }
 
-/* 4. تنسيق فقاعات الشات (Soft UI / Neumorphism) */
-/* رسالة العميل (أبيض مع ظل) */
-[data-testid="chatAvatarIcon-user"] + div {
-    background-color: #ffffff !important;
-    border-radius: 20px 20px 0px 20px !important;
-    padding: 15px !important;
-    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important;
-    border: none !important;
-    color: #4a4a4a !important;
-    direction: rtl; text-align: right;
-    margin-bottom: 10px;
-}
-
-/* رسالة البوت (أزرق باستيل هادي مع ظل) */
-[data-testid="chatAvatarIcon-assistant"] + div {
-    background-color: #e8f4f8 !important; 
-    border-radius: 20px 20px 20px 0px !important;
-    padding: 15px !important;
-    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important;
-    border: none !important;
-    color: #2c3e50 !important;
-    direction: rtl; text-align: right;
-    margin-bottom: 10px;
-}
-
-/* 5. تنسيق عام للنصوص العربية */
-.stMarkdown p {direction: rtl; text-align: right; line-height: 1.6;}
-h1, h2, h3 {direction: rtl; text-align: right; color: #2c3e50;}
-
-/* 6. تنسيق مربع إدخال النص (دائري وناعم) */
-.stTextInput input, .stChatInputContainer textarea {
-    direction: rtl; text-align: right;
-    border-radius: 30px !important;
-    border: none !important;
-    box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff !important;
-    padding: 15px 20px !important;
-    background-color: #f5f7fa !important;
-    color: #4a4a4a !important;
-}
-
-/* 7. تنسيق الأزرار (ناعمة و 3D) */
-div.stButton > button:first-child {
-    background-color: #f5f7fa;
-    color: #556ee6;
-    border-radius: 30px;
-    border: none;
-    font-weight: bold;
-    padding: 10px 25px;
-    box-shadow: 5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff;
-    transition: all 0.2s ease;
-}
-div.stButton > button:first-child:hover {
-    box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff;
-    color: #3b50ce;
-}
-
-/* 8. العنوان الترحيبي في الشات */
-.chat-title {
-    text-align: center;
-    color: #556ee6;
-    font-size: 2.2rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
-}
-.chat-subtitle {
-    text-align: center;
-    color: #8c98a4;
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-}
-
-/* 9. الصورة المتحركة (الترحيب) */
+/* الكائن الترحيبي في شاشة الدخول */
 .welcome-gif {
-    display: block;
-    margin: 0 auto;
     width: 150px;
     border-radius: 50%;
     margin-bottom: 20px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.glass-container {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    padding: 40px;
+    text-align: center;
+    direction: rtl;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* ------------------------------------- */
+/* 💬 تنسيق فقاعات الشات (Chat Bubbles) */
+/* ------------------------------------- */
+/* إخفاء خلفية رسائل Streamlit الافتراضية */
+.stChatMessage {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 15px !important;
+}
+
+/* رسالة المستخدم (العميل) - أبيض ناصع مع ظل خفيف */
+[data-testid="chatAvatarIcon-user"] + div {
+    background-color: #FFFFFF !important;
+    border-radius: 20px 20px 0px 20px !important;
+    padding: 12px 18px !important;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.05) !important;
+    border: 1px solid #EAEAEA !important;
+    color: #333333 !important;
+    direction: rtl; text-align: right;
+    display: inline-block;
+    max-width: 85%;
+}
+
+/* رسالة البوت (المساعد) - رمادي فاتح مائل للأزرق الهادي */
+[data-testid="chatAvatarIcon-assistant"] + div {
+    background-color: #EBF2FA !important; 
+    border-radius: 20px 20px 20px 0px !important;
+    padding: 12px 18px !important;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.05) !important;
+    border: 1px solid #D6E4F0 !important;
+    color: #2C3E50 !important;
+    direction: rtl; text-align: right;
+    display: inline-block;
+    max-width: 85%;
+}
+
+/* إخفاء صورة الأفاتار الافتراضية عشان شكل الفقاعة يبان أنظف (اختياري) */
+/* [data-testid="chatAvatarIcon-user"], [data-testid="chatAvatarIcon-assistant"] { display: none; } */
+
+/* ------------------------------------- */
+/* ✍️ تنسيق المدخلات والأزرار */
+/* ------------------------------------- */
+.stMarkdown p {direction: rtl; text-align: right; line-height: 1.6; margin-bottom: 0;}
+h1, h2, h3 {direction: rtl; text-align: right; color: #2C3E50;}
+
+.stTextInput input, .stChatInputContainer textarea {
+    direction: rtl; text-align: right;
+    border-radius: 25px !important;
+    border: 1px solid #D1D9E6 !important;
+    box-shadow: inset 0px 2px 5px rgba(0,0,0,0.02) !important;
+    padding: 12px 20px !important;
+    background-color: #FFFFFF !important;
+}
+
+div.stButton > button:first-child {
+    background-color: #FFFFFF;
+    color: #556EE6;
+    border-radius: 25px;
+    border: 1px solid #EAEAEA;
+    font-weight: bold;
+    padding: 8px 20px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+div.stButton > button:first-child:hover {
+    background-color: #556EE6;
+    color: #FFFFFF;
+    box-shadow: 0px 6px 15px rgba(85,110,230,0.3);
+}
+
+.chat-title {
+    text-align: center;
+    color: #2C3E50;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.chat-subtitle {
+    text-align: center;
+    color: #7F8C8D;
+    font-size: 1rem;
+    margin-bottom: 30px;
+}
+
+/* لوجو الشات الداخلي (صغير) */
+.inner-logo {
+    display: block;
+    margin: 0 auto;
+    width: 60px;
+    margin-bottom: 10px;
+    opacity: 0.8;
 }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# دوال الحفظ والمسح
+# ==========================================
+# 💾 دوال الحفظ والمسح
+# ==========================================
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -154,45 +187,50 @@ def clear_chat():
     st.rerun()
 
 # ==========================================
-# 🛑 شاشة الدخول (تأثير الزجاج)
+# 🛑 شاشة الدخول (فيها الـ GIF الترحيبي)
 # ==========================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
+    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
+    # الـ GIF الترحيبي برة بس
+    st.markdown('<img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjRmMjMyYjM5NjFkMzBhNjU5ZTk1MWNmYmRhNTE4ZjQ3NzZjYzJlZiZlcD12MV9pbnRlcm5hbF9naWZzX3NlYXJjaCZjdD1n/ASd0Ukj0y3qMM/giphy.gif" class="welcome-gif">', unsafe_allow_html=True)
+    
     st.markdown("""
         <div class="glass-container">
-            <h2 style="text-align:center; color:#2c3e50;">مرحباً بك في المساعد الذكي</h2>
-            <p style="text-align:center; color:#7f8c8d;">يرجى تسجيل الدخول للوصول إلى النظام</p>
-        </div>
+            <h2 style="color:#2c3e50; margin-bottom: 5px;">مرحباً بك مجدداً 👋</h2>
+            <p style="color:#7f8c8d; margin-bottom: 20px; font-size: 0.9rem;">يرجى تسجيل الدخول للوصول للمساعد الذكي</p>
     """, unsafe_allow_html=True)
     
-    st.write("") 
-    password_input = st.text_input("🔑 كلمة المرور:", type="password", placeholder="أدخل الرمز السري هنا...")
+    password_input = st.text_input("كلمة المرور", type="password", placeholder="أدخل الرمز السري هنا...", label_visibility="collapsed")
     
-    col1, col2, col3 = st.columns([1,1,1])
-    with col2: 
-        if st.button("تسجيل الدخول", use_container_width=True):
-            if password_input == BOT_PASSWORD:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("عذراً، كلمة المرور غير صحيحة ⛔")
+    st.write("") 
+    if st.button("تسجيل الدخول", use_container_width=True):
+        if password_input == BOT_PASSWORD:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("عذراً، كلمة المرور غير صحيحة ⛔")
+            
+    st.markdown('</div></div>', unsafe_allow_html=True)
     st.stop()
 
 # ==========================================
-# ✨ واجهة البوت
+# ✨ واجهة الشات الداخلية (البوت)
 # ==========================================
-st.markdown('<img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjRmMjMyYjM5NjFkMzBhNjU5ZTk1MWNmYmRhNTE4ZjQ3NzZjYzJlZiZlcD12MV9pbnRlcm5hbF9naWZzX3NlYXJjaCZjdD1n/ASd0Ukj0y3qMM/giphy.gif" class="welcome-gif">', unsafe_allow_html=True)
-st.markdown('<div class="chat-title">المساعد الذكي 1xBet ✨</div>', unsafe_allow_html=True)
-st.markdown('<div class="chat-subtitle">مرحباً! أنا هنا للإجابة على جميع استفساراتك.</div>', unsafe_allow_html=True)
+# لوجو صغير جوه الشات بدل الـ GIF
+st.markdown('<img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/1XBET_Logo.png" class="inner-logo">', unsafe_allow_html=True)
+
+st.markdown('<div class="chat-title">المساعد الذكي ✨</div>', unsafe_allow_html=True)
+st.markdown('<div class="chat-subtitle">أنا هنا للإجابة على استفساراتك حول منصة 1xBet</div>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    if st.button("🧹 مسح الشات", use_container_width=True):
+    if st.button("🧹 مسح محادثة اليوم", use_container_width=True):
         clear_chat()
 
-st.divider()
+st.write("") # مسافة
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -214,6 +252,7 @@ knowledge_base = """
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# عرض الرسائل في فقاعات ملونة
 for msg in st.session_state.messages:
     avatar = "👤" if msg["role"] == "user" else "🤖"
     with st.chat_message(msg["role"], avatar=avatar):
@@ -226,17 +265,27 @@ if prompt := st.chat_input("اكتب رسالتك هنا..."):
 
     with st.spinner('جاري كتابة الرد... ✨'):
         try:
-            # استخدام موديل Groq
+            # تجميع السياق عشان يفتكر الكلام
+            conversation_history = ""
+            for msg in st.session_state.messages[-4:]:
+                conversation_history += f"{msg['role']}: {msg['content']}\n"
+
+            system_instruction = f"""
+            أنت مساعد ذكي ولطيف جداً ومصري لمنصة 1xBet.
+            - تحدث باللهجة المصرية العامية المحترمة والودودة.
+            - جاوب فقط بناءً على هذه المعلومات:
+            {knowledge_base}
+            
+            - سياق الكلام السابق (للتذكر):
+            {conversation_history}
+            
+            - السؤال الحالي: {prompt}
+            """
+            
             chat_completion = client.chat.completions.create(
                 messages=[
-                    {
-                        "role": "system",
-                        "content": f"أنت مساعد ذكي ولطيف جداً ومصري لمنصة 1xBet. تحدث باللهجة المصرية العامية المحترمة والودودة. جاوب فقط بناءً على هذه المعلومات:\n{knowledge_base}"
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt}
                 ],
                 model="llama-3.3-70b-versatile",
             )
