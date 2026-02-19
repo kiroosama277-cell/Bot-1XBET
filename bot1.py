@@ -264,4 +264,4 @@ if prompt := st.chat_input("اكتب رسالتك هنا..."):
                 st.error("عذراً، الخدمة مشغولة حالياً.")
                 
         except Exception as e:
-            st.error(f"حدث خطأ: {e}"
+            st.error(f"حدث خطأ: {e}")
