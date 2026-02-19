@@ -1,8 +1,9 @@
 import streamlit as st
-from groq import Groq
+import google.generativeai as genai
 import csv
 import os
 from datetime import datetime
+from streamlit_session_browser_storage import SessionStorage
 
 # ==========================================
 # 🔐 إعدادات
@@ -10,17 +11,17 @@ from datetime import datetime
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# --- الاتصال بـ Groq ---
+# --- الاتصال بجوجل ---
 try:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 except:
-    st.error("⛔ لم يتم العثور على مفتاح Groq في Secrets.")
+    st.error("⛔ لم يتم العثور على مفتاح Google في Secrets.")
     st.stop()
 
 # إعداد الصفحة
-st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
+st.set_page_config(page_title="المساعد الذكي", page_icon="🔒", layout="centered")
 
-# إخفاء العلامات
+# إخفاء العلامات + تنسيق عربي كامل
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -28,11 +29,30 @@ hide_streamlit_style = """
             header {visibility: hidden;}
             .stDeployButton {display:none;}
             [data-testid="stSidebar"] {display: none;}
+            
+            /* تنسيق النصوص العربية */
+            .stChatMessage {direction: rtl; text-align: right;}
+            .stTextInput input {direction: rtl; text-align: right;}
+            .stMarkdown p {direction: rtl; text-align: right;}
+            h1, h2, h3 {direction: rtl; text-align: right;}
+            
+            /* ضبط العنوان عشان ميتلخبطش */
+            .title-text {
+                direction: rtl; 
+                text-align: right;
+                font-size: 2.5rem;
+                font-weight: bold;
+            }
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# حفظ المحادثة
+# --- استرجاع الشات ---
+session = SessionStorage()
+if "messages" not in session:
+    session["messages"] = []
+
+# دوال الحفظ والمسح
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -43,7 +63,8 @@ def save_chat(question, answer):
         writer.writerow([now.strftime("%Y-%m-%d"), now.strftime("%H:%M:%S"), question, answer])
 
 def clear_chat():
-    st.session_state.messages = []
+    session["messages"] = []
+    st.rerun()
 
 # الحماية
 if "authenticated" not in st.session_state:
@@ -63,15 +84,15 @@ if not st.session_state.authenticated:
 # ==========================================
 # ✅ واجهة البوت
 # ==========================================
-st.title("🤖 مساعد 1xBet الذكي")
+# العنوان المظبوط (بدون لخبطة)
+st.markdown('<div class="title-text">🤖 المساعد الذكي لمنصة 1xBet</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns([8, 2])
 with col2:
     if st.button("🗑️ مسح الشات"):
         clear_chat()
-        st.rerun()
 
-st.success("أهلاً بك! (النظام يعمل بسرعة فائقة ⚡)")
+st.success("أهلاً بك! المحادثة محفوظة تلقائياً ✅")
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -90,37 +111,36 @@ knowledge_base = """
 - الميزة: لو حدث واحد فقط كسب، ستحصل على عائد (مش لازم كله يكسب).
 """
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for msg in st.session_state.messages:
+# عرض الرسائل
+for msg in session["messages"]:
     st.chat_message(msg["role"]).write(msg["content"])
 
 if prompt := st.chat_input("اكتب سؤالك هنا..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    session["messages"].append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
     with st.spinner('جاري التحليل...'):
         try:
-            # استخدام أحدث موديل شغال حالياً
-            chat_completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system",
-                        "content": f"أنت مساعد خدمة عملاء خبير. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}"
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                model="llama-3.3-70b-versatile",
-            )
-            bot_reply = chat_completion.choices[0].message.content
+            available_model = None
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    available_model = m.name
+                    break
             
-            st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-            st.chat_message("assistant").write(bot_reply)
-            save_chat(prompt, bot_reply)
-            
+            if available_model:
+                model = genai.GenerativeModel(available_model)
+                full_text = f"أنت موظف دعم فني. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}\nالسؤال: {prompt}"
+                response = model.generate_content(full_text)
+                bot_reply = response.text
+                
+                session["messages"].append({"role": "assistant", "content": bot_reply})
+                st.chat_message("assistant").write(bot_reply)
+                save_chat(prompt, bot_reply)
+                
+                # حفظ في المتصفح
+                session.save()
+            else:
+                st.error("عذراً، الخدمة مشغولة حالياً.")
+                
         except Exception as e:
             st.error(f"حدث خطأ: {e}")
