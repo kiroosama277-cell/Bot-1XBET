@@ -1,23 +1,23 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 import csv
 import os
 from datetime import datetime
 
 # ==========================================
-# 🔐 إعدادات أساسية
+# 🔐 إعدادات
 # ==========================================
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# الاتصال بجوجل (من الخزنة)
+# --- الاتصال بـ Groq ---
 try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except:
-    st.error("⛔ لم يتم العثور على مفتاح Google في Secrets.")
+    st.error("⛔ لم يتم العثور على مفتاح Groq في Secrets.")
     st.stop()
 
-# إعداد الصفحة (بدون شريط جانبي)
+# إعداد الصفحة
 st.set_page_config(page_title="المساعد الذكي", page_icon="✨", layout="centered", initial_sidebar_state="collapsed")
 
 # ==========================================
@@ -139,9 +139,7 @@ div.stButton > button:first-child:hover {
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# ==========================================
-# 💾 دوال الحفظ والمسح
-# ==========================================
+# دوال الحفظ والمسح
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -162,7 +160,6 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    # رسم الصندوق الزجاجي
     st.markdown("""
         <div class="glass-container">
             <h2 style="text-align:center; color:#2c3e50;">مرحباً بك في المساعد الذكي</h2>
@@ -170,7 +167,7 @@ if not st.session_state.authenticated:
         </div>
     """, unsafe_allow_html=True)
     
-    st.write("") # مسافة
+    st.write("") 
     password_input = st.text_input("🔑 كلمة المرور:", type="password", placeholder="أدخل الرمز السري هنا...")
     
     col1, col2, col3 = st.columns([1,1,1])
@@ -184,16 +181,12 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==========================================
-# ✨ واجهة البوت (Soft UI)
+# ✨ واجهة البوت
 # ==========================================
-# صورة الكائن اللطيف (GIF) بيلوح
 st.markdown('<img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjRmMjMyYjM5NjFkMzBhNjU5ZTk1MWNmYmRhNTE4ZjQ3NzZjYzJlZiZlcD12MV9pbnRlcm5hbF9naWZzX3NlYXJjaCZjdD1n/ASd0Ukj0y3qMM/giphy.gif" class="welcome-gif">', unsafe_allow_html=True)
-
-# العناوين
 st.markdown('<div class="chat-title">المساعد الذكي 1xBet ✨</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-subtitle">مرحباً! أنا هنا للإجابة على جميع استفساراتك.</div>', unsafe_allow_html=True)
 
-# زرار مسح الشات
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
     if st.button("🧹 مسح الشات", use_container_width=True):
@@ -201,7 +194,6 @@ with col2:
 
 st.divider()
 
-# --- قاعدة المعرفة ---
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
 1. نضغط القائمة > الملف الشخصي > ربط بجانب البريد الإلكتروني.
@@ -219,7 +211,6 @@ knowledge_base = """
 - الميزة: لو حدث واحد فقط كسب، ستحصل على عائد (مش لازم كله يكسب).
 """
 
-# عرض الرسائل
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -235,33 +226,27 @@ if prompt := st.chat_input("اكتب رسالتك هنا..."):
 
     with st.spinner('جاري كتابة الرد... ✨'):
         try:
-            available_model = None
-            for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
-                    available_model = m.name
-                    break
+            # استخدام موديل Groq
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"أنت مساعد ذكي ولطيف جداً ومصري لمنصة 1xBet. تحدث باللهجة المصرية العامية المحترمة والودودة. جاوب فقط بناءً على هذه المعلومات:\n{knowledge_base}"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="llama-3.3-70b-versatile",
+            )
+            bot_reply = chat_completion.choices[0].message.content
             
-            if available_model:
-                model = genai.GenerativeModel(available_model)
-                
-                system_instruction = f"""
-                أنت مساعد ذكي ولطيف جداً ومصري لمنصة 1xBet.
-                - تحدث باللهجة المصرية العامية المحترمة والودودة.
-                - جاوب فقط بناءً على هذه المعلومات:
-                {knowledge_base}
-                - السؤال الحالي: {prompt}
-                """
-                
-                response = model.generate_content(system_instruction)
-                bot_reply = response.text
-                
-                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-                with st.chat_message("assistant", avatar="🤖"):
-                    st.write(bot_reply)
-                
-                save_chat(prompt, bot_reply)
-            else:
-                st.error("عذراً، الخدمة مشغولة حالياً.")
+            st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+            with st.chat_message("assistant", avatar="🤖"):
+                st.write(bot_reply)
+            
+            save_chat(prompt, bot_reply)
                 
         except Exception as e:
             st.error(f"حدث خطأ: {e}")
