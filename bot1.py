@@ -3,7 +3,6 @@ import google.generativeai as genai
 import csv
 import os
 from datetime import datetime
-from streamlit_session_browser_storage import SessionStorage
 
 # ==========================================
 # 🔐 إعدادات أساسية
@@ -26,12 +25,14 @@ st.set_page_config(page_title="المساعد الذكي", page_icon="✨", layo
 # ==========================================
 custom_css = """
 <style>
-/* 1. إخفاء قوائم Streamlit الافتراضية */
+/* 1. إخفاء قوائم Streamlit الافتراضية تماماً */
 #MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
+footer {visibility: hidden !important;}
 header {visibility: hidden;}
 .stDeployButton {display:none;}
 [data-testid="stSidebar"] {display: none;}
+[data-testid="stDecoration"] {display: none;}
+[data-testid="stStatusWidget"] {display: none;}
 
 /* 2. خلفية الصفحة (تدرج لوني هادي ومريح جداً للعين) */
 .stApp {
@@ -54,24 +55,24 @@ header {visibility: hidden;}
 }
 
 /* 4. تنسيق فقاعات الشات (Soft UI / Neumorphism) */
-/* رسالة العميل (رمادي فاتح جداً) */
+/* رسالة العميل (أبيض مع ظل) */
 [data-testid="chatAvatarIcon-user"] + div {
     background-color: #ffffff !important;
     border-radius: 20px 20px 0px 20px !important;
     padding: 15px !important;
-    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important; /* ظل ناعم 3D */
+    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important;
     border: none !important;
     color: #4a4a4a !important;
     direction: rtl; text-align: right;
     margin-bottom: 10px;
 }
 
-/* رسالة البوت (أزرق باستيل هادي) */
+/* رسالة البوت (أزرق باستيل هادي مع ظل) */
 [data-testid="chatAvatarIcon-assistant"] + div {
     background-color: #e8f4f8 !important; 
     border-radius: 20px 20px 20px 0px !important;
     padding: 15px !important;
-    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important; /* ظل ناعم 3D */
+    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important;
     border: none !important;
     color: #2c3e50 !important;
     direction: rtl; text-align: right;
@@ -83,7 +84,7 @@ header {visibility: hidden;}
 h1, h2, h3 {direction: rtl; text-align: right; color: #2c3e50;}
 
 /* 6. تنسيق مربع إدخال النص (دائري وناعم) */
-.stTextInput input {
+.stTextInput input, .stChatInputContainer textarea {
     direction: rtl; text-align: right;
     border-radius: 30px !important;
     border: none !important;
@@ -91,10 +92,6 @@ h1, h2, h3 {direction: rtl; text-align: right; color: #2c3e50;}
     padding: 15px 20px !important;
     background-color: #f5f7fa !important;
     color: #4a4a4a !important;
-}
-.stTextInput input:focus {
-    box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff !important;
-    outline: none !important;
 }
 
 /* 7. تنسيق الأزرار (ناعمة و 3D) */
@@ -117,9 +114,10 @@ div.stButton > button:first-child:hover {
 .chat-title {
     text-align: center;
     color: #556ee6;
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: bold;
     margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
 }
 .chat-subtitle {
     text-align: center;
@@ -142,12 +140,8 @@ div.stButton > button:first-child:hover {
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 💾 إدارة الجلسة والشات
+# 💾 دوال الحفظ والمسح
 # ==========================================
-session = SessionStorage()
-if "messages" not in session:
-    session["messages"] = []
-
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -158,7 +152,7 @@ def save_chat(question, answer):
         writer.writerow([now.strftime("%Y-%m-%d"), now.strftime("%H:%M:%S"), question, answer])
 
 def clear_chat():
-    session["messages"] = []
+    st.session_state.messages = []
     st.rerun()
 
 # ==========================================
@@ -171,8 +165,8 @@ if not st.session_state.authenticated:
     # رسم الصندوق الزجاجي
     st.markdown("""
         <div class="glass-container">
-            <h2 style="text-align:center; color:#2c3e50;">مرحباً بك في 1xBet</h2>
-            <p style="text-align:center; color:#7f8c8d;">يرجى تسجيل الدخول للوصول إلى المساعد الذكي</p>
+            <h2 style="text-align:center; color:#2c3e50;">مرحباً بك في المساعد الذكي</h2>
+            <p style="text-align:center; color:#7f8c8d;">يرجى تسجيل الدخول للوصول إلى النظام</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -180,7 +174,7 @@ if not st.session_state.authenticated:
     password_input = st.text_input("🔑 كلمة المرور:", type="password", placeholder="أدخل الرمز السري هنا...")
     
     col1, col2, col3 = st.columns([1,1,1])
-    with col2: # الزرار في النص
+    with col2: 
         if st.button("تسجيل الدخول", use_container_width=True):
             if password_input == BOT_PASSWORD:
                 st.session_state.authenticated = True
@@ -202,7 +196,7 @@ st.markdown('<div class="chat-subtitle">مرحباً! أنا هنا للإجاب
 # زرار مسح الشات
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    if st.button("🧹 بدء محادثة جديدة", use_container_width=True):
+    if st.button("🧹 مسح الشات", use_container_width=True):
         clear_chat()
 
 st.divider()
@@ -225,16 +219,17 @@ knowledge_base = """
 - الميزة: لو حدث واحد فقط كسب، ستحصل على عائد (مش لازم كله يكسب).
 """
 
-# عرض الرسائل القديمة مع أيقونات مخصصة
-for msg in session["messages"]:
+# عرض الرسائل
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
     avatar = "👤" if msg["role"] == "user" else "🤖"
     with st.chat_message(msg["role"], avatar=avatar):
         st.write(msg["content"])
 
-# إدخال سؤال جديد
 if prompt := st.chat_input("اكتب رسالتك هنا..."):
-    # إضافة وعرض رسالة المستخدم
-    session["messages"].append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.write(prompt)
 
@@ -249,7 +244,6 @@ if prompt := st.chat_input("اكتب رسالتك هنا..."):
             if available_model:
                 model = genai.GenerativeModel(available_model)
                 
-                # التعليمات المصرية
                 system_instruction = f"""
                 أنت مساعد ذكي ولطيف جداً ومصري لمنصة 1xBet.
                 - تحدث باللهجة المصرية العامية المحترمة والودودة.
@@ -261,15 +255,13 @@ if prompt := st.chat_input("اكتب رسالتك هنا..."):
                 response = model.generate_content(system_instruction)
                 bot_reply = response.text
                 
-                # إضافة وعرض رد البوت
-                session["messages"].append({"role": "assistant", "content": bot_reply})
+                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
                 with st.chat_message("assistant", avatar="🤖"):
                     st.write(bot_reply)
                 
                 save_chat(prompt, bot_reply)
-                session.save()
             else:
                 st.error("عذراً، الخدمة مشغولة حالياً.")
                 
         except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+            st.error(f"حدث خطأ: {e}"
