@@ -1,2 +1,3 @@
 streamlit
 groq
+streamlit-session-browser-storage
