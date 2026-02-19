@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 import csv
 import os
 from datetime import datetime
@@ -10,11 +10,11 @@ from datetime import datetime
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# --- الاتصال بجوجل (من الخزنة) ---
+# --- الاتصال بـ Groq ---
 try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except:
-    st.error("⛔ لم يتم العثور على مفتاح Google في Secrets.")
+    st.error("⛔ لم يتم العثور على مفتاح Groq في Secrets.")
     st.stop()
 
 # إعداد الصفحة
@@ -71,7 +71,7 @@ with col2:
         clear_chat()
         st.rerun()
 
-st.success("أهلاً بك! النظام يعمل بنجاح ✅")
+st.success("أهلاً بك! (النظام يعمل بسرعة فائقة ⚡)")
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -102,24 +102,25 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
 
     with st.spinner('جاري التحليل...'):
         try:
-            # البحث الذكي عن الموديل المتاح
-            available_model = None
-            for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
-                    available_model = m.name
-                    break
+            # استخدام موديل Llama 3
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"أنت مساعد خدمة عملاء خبير. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="llama3-8b-8192",
+            )
+            bot_reply = chat_completion.choices[0].message.content
             
-            if available_model:
-                model = genai.GenerativeModel(available_model)
-                full_text = f"أنت موظف دعم فني. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}\nالسؤال: {prompt}"
-                response = model.generate_content(full_text)
-                bot_reply = response.text
-                
-                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-                st.chat_message("assistant").write(bot_reply)
-                save_chat(prompt, bot_reply)
-            else:
-                st.error("عذراً، الخدمة مشغولة حالياً.")
-                
+            st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+            st.chat_message("assistant").write(bot_reply)
+            save_chat(prompt, bot_reply)
+            
         except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+            st.error(f"حدث خطأ في الاتصال: {e}")
