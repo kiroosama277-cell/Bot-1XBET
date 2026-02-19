@@ -5,12 +5,12 @@ import os
 from datetime import datetime
 
 # ==========================================
-# 🔐 إعدادات
+# 🔐 إعدادات أساسية
 # ==========================================
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# --- الاتصال بـ Groq ---
+# الاتصال بـ Groq
 try:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except:
@@ -18,7 +18,7 @@ except:
     st.stop()
 
 # إعداد الصفحة
-st.set_page_config(page_title="المساعد الذكي", page_icon="✨", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="المساعد الذكي لـ 1xBet", page_icon="✨", layout="centered", initial_sidebar_state="collapsed")
 
 # ==========================================
 # 🎨 التصميم الشامل (Soft UI / Neumorphism) + الزجاج
@@ -52,72 +52,76 @@ header {visibility: hidden;}
     text-align: center;
     margin-top: 50px;
     direction: rtl;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* 4. تنسيق فقاعات الشات (Soft UI / Neumorphism) */
+/* 4. تنسيق فقاعات الشات (Soft UI) */
 /* رسالة العميل (أبيض مع ظل) */
-[data-testid="chatAvatarIcon-user"] + div {
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
     background-color: #ffffff !important;
     border-radius: 20px 20px 0px 20px !important;
     padding: 15px !important;
-    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important;
-    border: none !important;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.03) !important;
+    border: 1px solid #EAEAEA !important;
     color: #4a4a4a !important;
     direction: rtl; text-align: right;
     margin-bottom: 10px;
 }
 
 /* رسالة البوت (أزرق باستيل هادي مع ظل) */
-[data-testid="chatAvatarIcon-assistant"] + div {
-    background-color: #e8f4f8 !important; 
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    background-color: #F0F2F5 !important; 
     border-radius: 20px 20px 20px 0px !important;
     padding: 15px !important;
-    box-shadow: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff !important;
-    border: none !important;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.03) !important;
+    border: 1px solid #E2E8F0 !important;
     color: #2c3e50 !important;
     direction: rtl; text-align: right;
     margin-bottom: 10px;
 }
 
 /* 5. تنسيق عام للنصوص العربية */
-.stMarkdown p {direction: rtl; text-align: right; line-height: 1.6;}
+.stMarkdown p {direction: rtl; text-align: right; line-height: 1.6; font-size: 1.1rem !important;}
 h1, h2, h3 {direction: rtl; text-align: right; color: #2c3e50;}
 
 /* 6. تنسيق مربع إدخال النص (دائري وناعم) */
 .stTextInput input, .stChatInputContainer textarea {
     direction: rtl; text-align: right;
     border-radius: 30px !important;
-    border: none !important;
-    box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff !important;
+    border: 1px solid #D1D9E6 !important;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.02) !important;
     padding: 15px 20px !important;
-    background-color: #f5f7fa !important;
+    background-color: #ffffff !important;
     color: #4a4a4a !important;
 }
 
-/* 7. تنسيق الأزرار (ناعمة و 3D) */
+/* 7. تنسيق الأزرار (ناعمة) */
 div.stButton > button:first-child {
-    background-color: #f5f7fa;
+    background-color: #ffffff;
     color: #556ee6;
     border-radius: 30px;
-    border: none;
+    border: 1px solid #D1D9E6;
     font-weight: bold;
     padding: 10px 25px;
-    box-shadow: 5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.04);
     transition: all 0.2s ease;
 }
 div.stButton > button:first-child:hover {
-    box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff;
-    color: #3b50ce;
+    background-color: #556ee6;
+    color: #ffffff;
+    box-shadow: 0px 6px 15px rgba(85,110,230,0.3);
 }
 
-/* 8. العنوان الترحيبي في الشات */
+/* 8. العناوين الداخلية */
 .chat-title {
     text-align: center;
-    color: #556ee6;
+    color: #1a365d;
     font-size: 2.2rem;
-    font-weight: bold;
+    font-weight: 800;
     margin-bottom: 5px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+    direction: ltr; /* لضمان عدم تداخل الأرقام والإنجليزية */
 }
 .chat-subtitle {
     text-align: center;
@@ -126,20 +130,20 @@ div.stButton > button:first-child:hover {
     margin-bottom: 30px;
 }
 
-/* 9. الصورة المتحركة (الترحيب) */
+/* 9. الصورة المتحركة (الترحيب في شاشة الدخول فقط) */
 .welcome-gif {
     display: block;
     margin: 0 auto;
-    width: 150px;
-    border-radius: 50%;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    width: 140px;
+    margin-bottom: 15px;
 }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# دوال الحفظ والمسح
+# ==========================================
+# 💾 دوال الحفظ والمسح
+# ==========================================
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -154,21 +158,24 @@ def clear_chat():
     st.rerun()
 
 # ==========================================
-# 🛑 شاشة الدخول (تأثير الزجاج)
+# 🛑 شاشة الدخول
 # ==========================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
+    st.write("<br><br>", unsafe_allow_html=True)
+    
+    # الإيموجي المتحرك (تلويح) يظهر هنا فقط
+    st.markdown('<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b_1f3fb/512.gif" class="welcome-gif">', unsafe_allow_html=True)
+    
     st.markdown("""
         <div class="glass-container">
-            <h2 style="text-align:center; color:#2c3e50;">مرحباً بك في المساعد الذكي</h2>
-            <p style="text-align:center; color:#7f8c8d;">يرجى تسجيل الدخول للوصول إلى النظام</p>
-        </div>
+            <h2 style="text-align:center; color:#2c3e50;">مرحباً بك 👋</h2>
+            <p style="text-align:center; color:#7f8c8d; font-size:14px;">يرجى إدخال الرمز السري للبدء</p>
     """, unsafe_allow_html=True)
     
-    st.write("") 
-    password_input = st.text_input("🔑 كلمة المرور:", type="password", placeholder="أدخل الرمز السري هنا...")
+    password_input = st.text_input("كلمة المرور", type="password", placeholder="الرمز السري...", label_visibility="collapsed")
     
     col1, col2, col3 = st.columns([1,1,1])
     with col2: 
@@ -177,22 +184,22 @@ if not st.session_state.authenticated:
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error("عذراً، كلمة المرور غير صحيحة ⛔")
+                st.error("عذراً، الرمز غير صحيح ⛔")
+    st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
 # ==========================================
 # ✨ واجهة البوت
 # ==========================================
-st.markdown('<img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjRmMjMyYjM5NjFkMzBhNjU5ZTk1MWNmYmRhNTE4ZjQ3NzZjYzJlZiZlcD12MV9pbnRlcm5hbF9naWZzX3NlYXJjaCZjdD1n/ASd0Ukj0y3qMM/giphy.gif" class="welcome-gif">', unsafe_allow_html=True)
-st.markdown('<div class="chat-title">المساعد الذكي 1xBet ✨</div>', unsafe_allow_html=True)
-st.markdown('<div class="chat-subtitle">مرحباً! أنا هنا للإجابة على جميع استفساراتك.</div>', unsafe_allow_html=True)
+# العنوان الصحيح الذي لا يتداخل
+st.markdown('<div class="chat-title">المساعد الذكي لـ 1xBet 🤖</div>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    if st.button("🧹 مسح الشات", use_container_width=True):
+    if st.button("🧹 مسح المحادثة", use_container_width=True):
         clear_chat()
 
-st.divider()
+st.write("") # مسافة للترتيب
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -209,11 +216,13 @@ knowledge_base = """
 - هو دمج بين الرهان الأحادي والاكسبريس.
 - يمكن وضع من 2 لـ 8 أحداث.
 - الميزة: لو حدث واحد فقط كسب، ستحصل على عائد (مش لازم كله يكسب).
+- مثال: 4 أحداث برهان 150 جنيه. يقسم النظام المبلغ على 15 رهان مختلف.
 """
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# عرض الرسائل بالأيقونات الصحيحة
 for msg in st.session_state.messages:
     avatar = "👤" if msg["role"] == "user" else "🤖"
     with st.chat_message(msg["role"], avatar=avatar):
@@ -226,19 +235,34 @@ if prompt := st.chat_input("اكتب رسالتك هنا..."):
 
     with st.spinner('جاري كتابة الرد... ✨'):
         try:
-            # استخدام موديل Groq
+            # تجميع السياق
+            conversation_history = ""
+            for msg in st.session_state.messages[-4:]:
+                conversation_history += f"{msg['role']}: {msg['content']}\n"
+
+            # 🛑 التعليمات الصارمة جداً للمصري
+            system_instruction = f"""
+            تعليمات صارمة جداً (Strict Instructions):
+            1. أنت موظف خدمة عملاء مصري لمنصة 1xBet.
+            2. تحدث **فقط** باللهجة المصرية العامية الودودة والمحترمة.
+            3. **ممنوع منعاً باتاً** استخدام اللغة الإنجليزية أو الفصحى المعقدة (يسمح فقط بكتابة 1xBet).
+            4. أجب بناءً على المعلومات التالية فقط ولا تقم بتأليف أي شيء:
+            {knowledge_base}
+            
+            سياق المحادثة السابقة:
+            {conversation_history}
+            
+            السؤال الحالي: {prompt}
+            الرد (بالمصري فقط):
+            """
+
             chat_completion = client.chat.completions.create(
                 messages=[
-                    {
-                        "role": "system",
-                        "content": f"أنت مساعد ذكي ولطيف جداً ومصري لمنصة 1xBet. تحدث باللهجة المصرية العامية المحترمة والودودة. جاوب فقط بناءً على هذه المعلومات:\n{knowledge_base}"
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt}
                 ],
                 model="llama-3.3-70b-versatile",
+                temperature=0.2, # لضمان عدم التأليف والالتزام بالنص
             )
             bot_reply = chat_completion.choices[0].message.content
             
