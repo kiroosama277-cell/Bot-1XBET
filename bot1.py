@@ -10,9 +10,6 @@ from datetime import datetime
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# رابط صورة اللوجو (تقدري تغيريه بأي رابط صورة تانية)
-BACKGROUND_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/f/f3/1XBET_Logo.png"
-
 # --- الاتصال بـ Groq ---
 try:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -23,48 +20,31 @@ except:
 # إعداد الصفحة
 st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
 
-# ==========================================
-# 🎨 تنسيق الخلفية + إخفاء العلامات + العربي
-# ==========================================
-page_bg_img = f"""
-<style>
-/* إخفاء القوائم */
-#MainMenu {{visibility: hidden;}}
-footer {{visibility: hidden;}}
-header {{visibility: hidden;}}
-.stDeployButton {{display:none;}}
-[data-testid="stSidebar"] {{display: none;}}
-
-/* تنسيق النصوص العربية */
-.stChatMessage {{direction: rtl; text-align: right;}}
-.stTextInput input {{direction: rtl; text-align: right;}}
-.stMarkdown p {{direction: rtl; text-align: right;}}
-h1, h2, h3 {{direction: rtl; text-align: right;}}
-
-/* تنسيق العنوان */
-.title-text {{
-    direction: rtl; 
-    text-align: right;
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #ffffff; /* لون العنوان أبيض عشان يبان */
-    text-shadow: 2px 2px 4px #000000;
-}}
-
-/* 🖼️ صورة الخلفية */
-[data-testid="stAppViewContainer"] {{
-    background-image: url("{BACKGROUND_IMAGE_URL}");
-    background-size: 40%;  /* حجم اللوجو */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    /* تغميق الخلفية شوية عشان الكلام يبان */
-    background-color: rgba(255, 255, 255, 0.9); 
-    background-blend-mode: overlay;
-}}
-</style>
-"""
-st.markdown(page_bg_img, unsafe_allow_html=True)
+# إخفاء العلامات + تنسيق عربي
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            .stDeployButton {display:none;}
+            [data-testid="stSidebar"] {display: none;}
+            
+            /* تنسيق النصوص العربية */
+            .stChatMessage {direction: rtl; text-align: right;}
+            .stTextInput input {direction: rtl; text-align: right;}
+            .stMarkdown p {direction: rtl; text-align: right;}
+            h1, h2, h3 {direction: rtl; text-align: right;}
+            
+            /* تنسيق العنوان */
+            .title-text {
+                direction: rtl; 
+                text-align: right;
+                font-size: 2.5rem;
+                font-weight: bold;
+            }
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # دوال الحفظ والمسح
 def save_chat(question, answer):
@@ -105,7 +85,7 @@ with col2:
     if st.button("🗑️ مسح الشات"):
         clear_chat()
 
-# الجملة الترحيبية الجديدة
+# الجملة الترحيبية
 st.success("مرحباً! كيف يمكنني مساعدتك اليوم؟ ✅")
 
 knowledge_base = """
