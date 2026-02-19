@@ -108,20 +108,28 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
 
     with st.spinner('جاري الرد...'):
         try:
-            # تجميع المحادثة السابقة عشان يفتكر السياق
+            # تجميع المحادثة السابقة
             conversation_history = ""
-            for msg in st.session_state.messages[-6:]: # ياخد آخر 6 رسايل بس عشان ميهنجش
+            for msg in st.session_state.messages[-4:]: 
                 conversation_history += f"{msg['role']}: {msg['content']}\n"
 
+            # تعليمات صارمة جداً للغة
             system_instruction = f"""
-            أنت موظف خدمة عملاء مصري "شاطر جداً" لمنصة 1xBet.
-            - استخدم المعلومات دي للإجابة:
+            تعليمات صارمة (Strict Instructions):
+            1. أنت موظف خدمة عملاء مصري لمنصة 1xBet.
+            2. تحدث **فقط** باللهجة المصرية العامية المحترمة.
+            3. **ممنوع منعاً باتاً** الكتابة باللغة الإنجليزية (إلا عند ذكر اسم المنصة "1xBet" فقط).
+            4. تأكد أن الجمل العربية مرتبة وصحيحة ومفيدة.
+            5. لا تقم بتأليف معلومات غير موجودة في النص المرفق.
+            
+            معلوماتك (المصدر الوحيد):
             {knowledge_base}
             
-            - دي المحادثة اللي دارت بينا لحد دلوقتي (عشان تفتكر السياق):
+            سياق المحادثة السابقة:
             {conversation_history}
             
-            - رد على السؤال الأخير ده باللهجة المصرية: {prompt}
+            السؤال الحالي: {prompt}
+            الرد (باللهجة المصرية فقط):
             """
 
             chat_completion = client.chat.completions.create(
@@ -130,6 +138,7 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
                     {"role": "user", "content": prompt}
                 ],
                 model="llama-3.3-70b-versatile",
+                temperature=0.3, # تقليل الإبداع عشان يلتزم بالنص
             )
             bot_reply = chat_completion.choices[0].message.content
             
