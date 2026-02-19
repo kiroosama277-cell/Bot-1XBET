@@ -20,19 +20,37 @@ except:
 # إعداد الصفحة
 st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
 
-# إخفاء العلامات + تنسيق عربي
+# ==========================================
+# 🎨 إخفاء العلامات (CSS Hack القوي)
+# ==========================================
 hide_streamlit_style = """
             <style>
+            /* إخفاء القوائم العلوية */
             #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
             header {visibility: hidden;}
+            
+            /* إخفاء الفوتر والعلامات المائية */
+            footer {visibility: hidden !important;}
+            [data-testid="stDecoration"] {display: none;}
+            [data-testid="stStatusWidget"] {display: none;}
             .stDeployButton {display:none;}
+            
+            /* إخفاء الشريط الجانبي تماماً */
             [data-testid="stSidebar"] {display: none;}
+            
+            /* تنسيق النصوص العربية */
             .stChatMessage {direction: rtl; text-align: right;}
             .stTextInput input {direction: rtl; text-align: right;}
             .stMarkdown p {direction: rtl; text-align: right;}
             h1, h2, h3 {direction: rtl; text-align: right;}
-            .title-text {direction: rtl; text-align: right; font-size: 2.5rem; font-weight: bold;}
+            
+            /* تنسيق العنوان */
+            .title-text {
+                direction: rtl; 
+                text-align: right;
+                font-size: 2.5rem;
+                font-weight: bold;
+            }
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
@@ -106,30 +124,24 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    with st.spinner('جاري الرد...'):
+    with st.spinner('جاري التحليل...'):
         try:
-            # تجميع المحادثة السابقة
+            # تجميع السياق
             conversation_history = ""
-            for msg in st.session_state.messages[-4:]: 
+            for msg in st.session_state.messages[-4:]:
                 conversation_history += f"{msg['role']}: {msg['content']}\n"
 
-            # تعليمات صارمة جداً للغة
+            # تعليمات اللهجة المصرية
             system_instruction = f"""
-            تعليمات صارمة (Strict Instructions):
-            1. أنت موظف خدمة عملاء مصري لمنصة 1xBet.
-            2. تحدث **فقط** باللهجة المصرية العامية المحترمة.
-            3. **ممنوع منعاً باتاً** الكتابة باللغة الإنجليزية (إلا عند ذكر اسم المنصة "1xBet" فقط).
-            4. تأكد أن الجمل العربية مرتبة وصحيحة ومفيدة.
-            5. لا تقم بتأليف معلومات غير موجودة في النص المرفق.
-            
-            معلوماتك (المصدر الوحيد):
+            تعليمات صارمة:
+            1. أنت موظف خدمة عملاء مصري.
+            2. تحدث باللهجة المصرية العامية فقط.
+            3. ممنوع الإنجليزية إلا للضرورة القصوى (مثل اسم 1xBet).
+            4. التزم بالمعلومات التالية فقط:
             {knowledge_base}
             
-            سياق المحادثة السابقة:
+            سياق سابق:
             {conversation_history}
-            
-            السؤال الحالي: {prompt}
-            الرد (باللهجة المصرية فقط):
             """
 
             chat_completion = client.chat.completions.create(
@@ -138,7 +150,6 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
                     {"role": "user", "content": prompt}
                 ],
                 model="llama-3.3-70b-versatile",
-                temperature=0.3, # تقليل الإبداع عشان يلتزم بالنص
             )
             bot_reply = chat_completion.choices[0].message.content
             
