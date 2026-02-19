@@ -12,7 +12,6 @@ HISTORY_FILE = "chat_history.csv"
 
 # --- الاتصال بـ Groq ---
 try:
-    # الكود ده بيدور على مفتاح Groq اللي حطيتيه في Secrets
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except:
     st.error("⛔ لم يتم العثور على مفتاح Groq في Secrets.")
@@ -21,7 +20,7 @@ except:
 # إعداد الصفحة
 st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
 
-# إخفاء العلامات المائية
+# إخفاء العلامات
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -72,7 +71,7 @@ with col2:
         clear_chat()
         st.rerun()
 
-st.success("أهلاً بك! (يعمل الآن بمحرك Groq السريع ⚡)")
+st.success("أهلاً بك! النظام يعمل بسرعة فائقة ⚡")
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -101,4 +100,26 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    with st.spinner('جاري التح
+    with st.spinner('جاري التحليل...'):
+        try:
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"أنت مساعد خدمة عملاء خبير. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="llama3-8b-8192",
+            )
+            bot_reply = chat_completion.choices[0].message.content
+            
+            st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+            st.chat_message("assistant").write(bot_reply)
+            save_chat(prompt, bot_reply)
+            
+        except Exception as e:
+            st.error(f"حدث خطأ في الاتصال: {e}")
