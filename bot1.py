@@ -28,20 +28,11 @@ hide_streamlit_style = """
             header {visibility: hidden;}
             .stDeployButton {display:none;}
             [data-testid="stSidebar"] {display: none;}
-            
-            /* تنسيق النصوص العربية */
             .stChatMessage {direction: rtl; text-align: right;}
             .stTextInput input {direction: rtl; text-align: right;}
             .stMarkdown p {direction: rtl; text-align: right;}
             h1, h2, h3 {direction: rtl; text-align: right;}
-            
-            /* تنسيق العنوان */
-            .title-text {
-                direction: rtl; 
-                text-align: right;
-                font-size: 2.5rem;
-                font-weight: bold;
-            }
+            .title-text {direction: rtl; text-align: right; font-size: 2.5rem; font-weight: bold;}
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
@@ -85,7 +76,6 @@ with col2:
     if st.button("🗑️ مسح الشات"):
         clear_chat()
 
-# الجملة الترحيبية
 st.success("مرحباً! كيف يمكنني مساعدتك اليوم؟ ✅")
 
 knowledge_base = """
@@ -103,6 +93,7 @@ knowledge_base = """
 - هو دمج بين الرهان الأحادي والاكسبريس.
 - يمكن وضع من 2 لـ 8 أحداث.
 - الميزة: لو حدث واحد فقط كسب، ستحصل على عائد (مش لازم كله يكسب).
+- مثال: 4 أحداث برهان 150 جنيه. يقسم النظام المبلغ على 15 رهان مختلف.
 """
 
 if "messages" not in st.session_state:
@@ -117,25 +108,26 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
 
     with st.spinner('جاري الرد...'):
         try:
-            # تعليمات اللهجة المصرية
+            # تجميع المحادثة السابقة عشان يفتكر السياق
+            conversation_history = ""
+            for msg in st.session_state.messages[-6:]: # ياخد آخر 6 رسايل بس عشان ميهنجش
+                conversation_history += f"{msg['role']}: {msg['content']}\n"
+
             system_instruction = f"""
             أنت موظف خدمة عملاء مصري "شاطر جداً" لمنصة 1xBet.
-            - اتكلم باللهجة المصرية العامية الودودة.
-            - خليك لطيف ومحترم جداً ومختصر.
-            - جاوب على السؤال ده بناءً على المعلومات دي فقط:
+            - استخدم المعلومات دي للإجابة:
             {knowledge_base}
+            
+            - دي المحادثة اللي دارت بينا لحد دلوقتي (عشان تفتكر السياق):
+            {conversation_history}
+            
+            - رد على السؤال الأخير ده باللهجة المصرية: {prompt}
             """
 
             chat_completion = client.chat.completions.create(
                 messages=[
-                    {
-                        "role": "system",
-                        "content": system_instruction
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt}
                 ],
                 model="llama-3.3-70b-versatile",
             )
