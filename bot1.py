@@ -18,7 +18,7 @@ except:
     st.stop()
 
 # إعداد الصفحة
-st.set_page_config(page_title="المساعد الذكي", page_icon="🔒", layout="centered")
+st.set_page_config(page_title="مساعد 1xBet", page_icon="🔒", layout="centered")
 
 # إخفاء العلامات + تنسيق عربي
 hide_streamlit_style = """
@@ -85,7 +85,7 @@ with col2:
     if st.button("🗑️ مسح الشات"):
         clear_chat()
 
-st.success("أهلاً بك! (يعمل بسرعة فائقة ⚡)")
+st.success("منور يا فندم! أنا معاك لأي استفسار. ✅")
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -115,14 +115,22 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    with st.spinner('جاري التحليل...'):
+    with st.spinner('جاري الرد...'):
         try:
-            # Groq Llama 3
+            # هنا التعليمات الخاصة باللهجة المصرية
+            system_instruction = f"""
+            أنت موظف خدمة عملاء مصري "شاطر جداً" لمنصة 1xBet.
+            - اتكلم باللهجة المصرية العامية الودودة (زي: "يا فندم"، "تحت أمرك"، "بص حضرتك").
+            - خليك لطيف ومحترم جداً ومختصر.
+            - جاوب على السؤال ده بناءً على المعلومات دي فقط:
+            {knowledge_base}
+            """
+
             chat_completion = client.chat.completions.create(
                 messages=[
                     {
                         "role": "system",
-                        "content": f"أنت مساعد خدمة عملاء خبير. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}"
+                        "content": system_instruction
                     },
                     {
                         "role": "user",
