@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 import csv
 import os
 from datetime import datetime
@@ -11,17 +11,17 @@ from streamlit_session_browser_storage import SessionStorage
 BOT_PASSWORD = "12345"
 HISTORY_FILE = "chat_history.csv"
 
-# --- الاتصال بجوجل ---
+# --- الاتصال بـ Groq ---
 try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except:
-    st.error("⛔ لم يتم العثور على مفتاح Google في Secrets.")
+    st.error("⛔ لم يتم العثور على مفتاح Groq في Secrets.")
     st.stop()
 
 # إعداد الصفحة
 st.set_page_config(page_title="المساعد الذكي", page_icon="🔒", layout="centered")
 
-# إخفاء العلامات + تنسيق عربي كامل
+# إخفاء العلامات + تنسيق عربي
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -36,7 +36,7 @@ hide_streamlit_style = """
             .stMarkdown p {direction: rtl; text-align: right;}
             h1, h2, h3 {direction: rtl; text-align: right;}
             
-            /* ضبط العنوان عشان ميتلخبطش */
+            /* تنسيق العنوان */
             .title-text {
                 direction: rtl; 
                 text-align: right;
@@ -47,7 +47,7 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# --- استرجاع الشات ---
+# --- استرجاع الشات من المتصفح ---
 session = SessionStorage()
 if "messages" not in session:
     session["messages"] = []
@@ -84,7 +84,6 @@ if not st.session_state.authenticated:
 # ==========================================
 # ✅ واجهة البوت
 # ==========================================
-# العنوان المظبوط (بدون لخبطة)
 st.markdown('<div class="title-text">🤖 المساعد الذكي لمنصة 1xBet</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns([8, 2])
@@ -92,7 +91,7 @@ with col2:
     if st.button("🗑️ مسح الشات"):
         clear_chat()
 
-st.success("أهلاً بك! المحادثة محفوظة تلقائياً ✅")
+st.success("أهلاً بك! (يعمل بسرعة فائقة ⚡)")
 
 knowledge_base = """
 كيفية ربط بريد إلكتروني على منصة 1xBet:
@@ -121,26 +120,28 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
 
     with st.spinner('جاري التحليل...'):
         try:
-            available_model = None
-            for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
-                    available_model = m.name
-                    break
+            # استخدام موديل Groq الأحدث
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"أنت مساعد خدمة عملاء خبير. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="llama-3.3-70b-versatile",
+            )
+            bot_reply = chat_completion.choices[0].message.content
             
-            if available_model:
-                model = genai.GenerativeModel(available_model)
-                full_text = f"أنت موظف دعم فني. جاوب فقط بناءً على المعلومات التالية:\n{knowledge_base}\nالسؤال: {prompt}"
-                response = model.generate_content(full_text)
-                bot_reply = response.text
-                
-                session["messages"].append({"role": "assistant", "content": bot_reply})
-                st.chat_message("assistant").write(bot_reply)
-                save_chat(prompt, bot_reply)
-                
-                # حفظ في المتصفح
-                session.save()
-            else:
-                st.error("عذراً، الخدمة مشغولة حالياً.")
-                
+            session["messages"].append({"role": "assistant", "content": bot_reply})
+            st.chat_message("assistant").write(bot_reply)
+            save_chat(prompt, bot_reply)
+            
+            # حفظ الذاكرة
+            session.save()
+            
         except Exception as e:
             st.error(f"حدث خطأ: {e}")
