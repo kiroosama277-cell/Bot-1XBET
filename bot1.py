@@ -102,7 +102,7 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
 
     with st.spinner('جاري التحليل...'):
         try:
-            # استخدام الموديل الأحدث والشغال 100%
+            # استخدام أحدث موديل شغال حالياً
             chat_completion = client.chat.completions.create(
                 messages=[
                     {
@@ -114,7 +114,7 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
                         "content": prompt,
                     }
                 ],
-                model="llama3-70b-8192", 
+                model="llama-3.3-70b-versatile",
             )
             bot_reply = chat_completion.choices[0].message.content
             
