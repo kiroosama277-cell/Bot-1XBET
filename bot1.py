@@ -32,7 +32,7 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# دوال الحفظ والمسح
+# حفظ المحادثة
 def save_chat(question, answer):
     file_exists = os.path.isfile(HISTORY_FILE)
     with open(HISTORY_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
@@ -102,7 +102,7 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
 
     with st.spinner('جاري التحليل...'):
         try:
-            # استخدام موديل Llama 3
+            # استخدام الموديل الأحدث والشغال 100%
             chat_completion = client.chat.completions.create(
                 messages=[
                     {
@@ -114,7 +114,7 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
                         "content": prompt,
                     }
                 ],
-                model="llama3-8b-8192",
+                model="llama3-70b-8192", 
             )
             bot_reply = chat_completion.choices[0].message.content
             
@@ -123,4 +123,4 @@ if prompt := st.chat_input("اكتب سؤالك هنا..."):
             save_chat(prompt, bot_reply)
             
         except Exception as e:
-            st.error(f"حدث خطأ في الاتصال: {e}")
+            st.error(f"حدث خطأ: {e}")
